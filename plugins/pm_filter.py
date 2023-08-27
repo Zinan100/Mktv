@@ -623,11 +623,12 @@ async def auto_filter(client, msg, spoll=False):
             return
         if 2 < len(message.text) < 100:
             search = message.text
-            reply = await search.repace(" ", "+")
+            reply = await search.replace(" ", "+")
+            message = msg.message.reply_to_message
             files, offset, total_results = await get_search_results(search.lower(), offset=0, filter=True)
             if not files:
                 if settings["spell_check"]:
-                    return await advantage_spell_chok(client, msg, search, reply)
+                    return await advantage_spell_chok(client, msg, search, reply, message)
                 else:
                     return
         else:
@@ -711,22 +712,30 @@ async def auto_filter(client, msg, spoll=False):
         cap = f"Here is what i found for your query {search}"
     if imdb and imdb.get('poster'):
         try:
-            await message.reply_photo(photo=imdb.get('poster'), caption=cap[:1024],
+            l = await message.reply_photo(photo=imdb.get('poster'), caption=cap[:1024],
                                       reply_markup=InlineKeyboardMarkup(btn))
+            await asyncio.sleep(600)
+            await l.delete()
         except (MediaEmpty, PhotoInvalidDimensions, WebpageMediaEmpty):
             pic = imdb.get('poster')
             poster = pic.replace('.jpg', "._V1_UX360.jpg")
-            await message.reply_photo(photo=poster, caption=cap[:1024], reply_markup=InlineKeyboardMarkup(btn))
+            j = await message.reply_photo(photo=poster, caption=cap[:1024], reply_markup=InlineKeyboardMarkup(btn))
+            await asyncio.sleep(600)
+            await j.delete()
         except Exception as e:
             logger.exception(e)
-            await message.reply_text(cap, reply_markup=InlineKeyboardMarkup(btn))
+            k = await message.reply_text(cap, reply_markup=InlineKeyboardMarkup(btn))
+            await asyncio.sleep(600)
+            await k.delete()
     else:
-        await message.reply_text(cap, reply_markup=InlineKeyboardMarkup(btn))
+        h = await message.reply_text(cap, reply_markup=InlineKeyboardMarkup(btn))
+        await asyncio.sleep(600)
+        await h.delete()
     if spoll:
         await msg.message.delete()
 
 
-async def advantage_spell_chok(client, msg, search, reply):
+async def advantage_spell_chok(client, msg, search, reply, message):
     k = await msg.reply_text(
         text=f"""Hey {msg.from_user.mention}, 
 Your requested movie {search} spelling is incrroct or check this movie released in ott 🥺 
@@ -736,6 +745,7 @@ Click the google button and check spelling""",
         ]])
     )
     await asyncio.sleep(60)
+    await message.delete()
     await k.delete()
 
 
